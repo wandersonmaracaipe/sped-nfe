@@ -1,3 +1,42 @@
+# SPED-NFE — Fork Valuor
+
+> **Fork de [`nfephp-org/sped-nfe`](https://github.com/nfephp-org/sped-nfe) mantido pela Valuor**
+> para uso na **API Fiscal** do ValuorERP enquanto a NFePHP não publica o release oficial das NTs.
+
+## ⚙️ Customizações deste fork
+
+| NT | O que foi alterado | Status |
+|----|--------------------|--------|
+| **NT 2026.004** — CNPJ Alfanumérico | Schemas XSD aceitam CNPJ alfanumérico: `TCnpj` → `[A-Z0-9]{12}[0-9]{2}`, `TCnpjVar` → `[A-Z0-9]{3,14}`, chave de acesso (`TChNFe`/`Id`/QR) → `[0-9]{6}[A-Z0-9]{12}[0-9]{26}`, nos `tiposBasico_v4.00.xsd` + `leiauteNFe_v4.00.xsd`/`prod_*`. O DV da chave já é alfanumérico no `sped-common` (`Keys::verifyingDigit` usa `ord(c)-48`). | ✅ master (PR #1) |
+
+Detalhes em [`CNPJ_ALFANUMERICO.md`](CNPJ_ALFANUMERICO.md).
+
+> **Solução definitiva:** substituir os schemes pelo pacote XSD oficial da NT 2026.004 quando a SEFAZ/
+> NFePHP publicar. Este patch destrava a emissão/validação com CNPJ alfanumérico enquanto isso.
+
+## 📦 Como a API Fiscal consome este fork
+
+No `composer.json` da API Fiscal (`fiscal-api/`):
+```json
+"repositories": [
+    { "type": "vcs", "url": "https://github.com/wandersonmaracaipe/sped-nfe" }
+],
+"require": {
+    "nfephp-org/sped-nfe": "dev-master as 5.2.5"
+}
+```
+O `composer.lock` fixa o commit exato. Para promover uma alteração deste fork à API:
+`cd fiscal-api && bash bin/atualizar-fork.sh --push` → redeploy do container fiscal.
+
+## 🔄 Manutenção (incorporar o upstream oficial)
+```bash
+git remote add upstream https://github.com/nfephp-org/sped-nfe   # uma vez
+git fetch upstream && git merge upstream/master                  # resolve conflitos do patch se houver
+git push origin master
+```
+
+---
+
 # SPED-NFE 
 
 Biblioteca para geração e comunicação das NFe com as SEFAZ autorizadoras, e visa fornecer os meios para gerar, assinar e enviar os dados relativos ao projeto Sped NFe das SEFAZ.
