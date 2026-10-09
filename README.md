@@ -2,22 +2,17 @@
 
 Biblioteca para geração e comunicação das NFe com as SEFAZ autorizadoras, e visa fornecer os meios para gerar, assinar e enviar os dados relativos ao projeto Sped NFe das SEFAZ.
 
-## Atualizado 
+## Atualizado
 
-- Nota Técnica 2025.001 v.1.00 Divulga Simplificação Operacional: NFC-e: Leiaute do QR-Code versão 3 NF-e
-- Nota Técnica 2025.002 v.1.01 Nota técnica de adequação dos leiautes da NF-e e da NFC-e Reforma Tributária do Consumo - RTC.
-- Nota Técnica Conjunta 2025.001 Divulga orientações sobre implementação do CNPJ alfanumérico nos documentos fiscais eletrônicos
-- Nota Técnica 2024.003 v.1.04 Alteração nas regras de validação 
-- Nota Técnica 2021.003 v.1.40 Validação GTIN
-- Nota Técnica 2024.003 v.1.05 Informações de Produtos da Agricultura, Pecuária e Produção Florestal e Alteração de regra de validação
-- Nota Técnica 2023.001 v.1.60 Tributação Monofásica sobre Combustíveis
-- Nota Técnica 2025.001 v.1.00 Simplificação Operacional: NFC-e (QR-Code versão 3) (Envio sincrono NFe)
-- Nota Técnica 2025.002-RTC v.1.10 Reforma Tributária do Consumo – Adequações NF-e / NFC-e
-- Schema PL_010v1.10b de 09/06/2025
-- Nota Técnica 2025.002-RTC v.1.20 Reforma Tributária do Consumo – Adequações NF-e / NFC-e
-- Schema PL_010v1.20b de 30/07/2025
-- Schema PL_010C v1.30 
-- Schema XSD CNPJ Alfa
+Situação de cada Nota Técnica (biblioteca e API Fiscal Valuor), conferida em 09/10/2026 contra o
+Portal Nacional da NF-e: **[docs/NotasTecnicas.md](docs/NotasTecnicas.md)**.
+
+- Leiaute 4.00 (PL_009_V4) e Reforma Tributária PL_010_V1.30 (NT 2025.002-RTC, com partes da v1.40: `cIndOp`, `refDFeAnt`, emitente sem IE).
+- Eventos da Reforma (NT 2025.002 v1.52, item 8): 112110–112150, 211110–211150, 212110/212120 e 110001.
+- CNPJ alfanumérico (NT 2026.004 e NT Conjunta 2025.001).
+- DANFE Simplificado Tipo 2 no XML (`tpImp=6`, NT 2026.002/2026.003).
+- QR-Code v3 da NFC-e (NT 2025.001), monofásico de combustíveis (NT 2023.001), agro (NT 2024.003), MEI (NT 2024.001), pagamento detalhado (NT 2023.004).
+- Pendentes: NT 2026.006 (split payment, produção em 03/11/2026), NT 2026.008 (valor líquido), NT 2026.010 (DANFE da Reforma), NT 2026.001 (PAA) e a v1.36+ da NT 2025.002 (`tpNFCredito` 06, `ISUFemit`, monofásica v1.50).
 
 
 ![PHP Supported Version][ico-php]
