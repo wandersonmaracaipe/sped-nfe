@@ -31,6 +31,7 @@ trait TraitTagEmit
             'IM',
             'CNAE',
             'CRT',
+            'tpRegimeIBSCBS',
             'CNPJ',
             'CPF',
             'ISUFEmit'
@@ -111,6 +112,16 @@ trait TraitTagEmit
             true,
             $identificador . "Código de Regime Tributário do emitente"
         );
+        //NT 2026.005 - Regime de Apuração do IBS e CBS do Simples Nacional (C21a)
+        if (isset($std->tpRegimeIBSCBS) && $std->tpRegimeIBSCBS !== '' && $std->tpRegimeIBSCBS !== null) {
+            $this->dom->addChild(
+                $this->emit,
+                "tpRegimeIBSCBS",
+                $std->tpRegimeIBSCBS,
+                false,
+                $identificador . "Tipo de Regime de Apuração do IBS e CBS do emitente"
+            );
+        }
         //NT 2005.002 v1.50
         $this->dom->addChild(
             $this->emit,

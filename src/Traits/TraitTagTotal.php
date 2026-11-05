@@ -597,6 +597,8 @@ trait TraitTagTotal
             'gMono_vCBSMonoRet',
             'gEstonoCred_vIBSEstCred',
             'gEstonoCred_vCBSEstCred',
+            'gTribSN_vIBSSN',
+            'gTribSN_vCBSSN',
         ];
         $std = $this->equilizeParameters($std, $possible);
         $identificador = "W34 IBSCBSTot -";
@@ -811,6 +813,27 @@ trait TraitTagTotal
                 "$identificador Valor total do CBS estornado (vCBSEstCred)"
             );
             $ibstot->appendChild($gEst);
+        }
+        // NT 2026.005 - Total da tributação do Simples Nacional (W59h)
+        $vIBSSNTot = $std->gTribSN_vIBSSN ?? ($this->stdIBSCBSTot->gTribSN->vIBSSN ?? null);
+        $vCBSSNTot = $std->gTribSN_vCBSSN ?? ($this->stdIBSCBSTot->gTribSN->vCBSSN ?? null);
+        if ($vIBSSNTot !== null || $vCBSSNTot !== null) {
+            $gTribSNTot = $this->dom->createElement("gTribSN");
+            $this->dom->addChild(
+                $gTribSNTot,
+                "vIBSSN",
+                $this->conditionalNumberFormatting($vIBSSNTot ?? 0),
+                true,
+                "$identificador Total do IBS do Simples Nacional (vIBSSN)"
+            );
+            $this->dom->addChild(
+                $gTribSNTot,
+                "vCBSSN",
+                $this->conditionalNumberFormatting($vCBSSNTot ?? 0),
+                true,
+                "$identificador Total da CBS do Simples Nacional (vCBSSN)"
+            );
+            $ibstot->appendChild($gTribSNTot);
         }
         $this->IBSCBSTot = $ibstot;
         return $ibstot;

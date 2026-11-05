@@ -183,6 +183,7 @@ final class Make
     protected array $aGCredPresIBSZFM = [];
     protected array $aGAjusteCompet = [];
     protected array $aGEstornoCred = [];
+    protected array $aGTribSN = [];
     protected array $aIS = [];
     protected array $aII = [];
     protected array $aObsItem = [];
@@ -348,6 +349,10 @@ final class Make
         $this->stdIBSCBSTot->gEstornoCred = new stdClass();
         $this->stdIBSCBSTot->gEstornoCred->vIBSEstCred = 0;
         $this->stdIBSCBSTot->gEstornoCred->vCBSEstCred = 0;
+
+        $this->stdIBSCBSTot->gTribSN = new stdClass();
+        $this->stdIBSCBSTot->gTribSN->vIBSSN = 0;
+        $this->stdIBSCBSTot->gTribSN->vCBSSN = 0;
     }
 
     /**
@@ -818,6 +823,9 @@ final class Make
                     } elseif (!empty($this->aGAjusteCompet[$item])) {
                         //não existe gIBSCBS, nem gIBSCBSMono, nem gTransfCred entao add gAjusteCompet
                         $this->addTag($ibscbs, $this->aGAjusteCompet[$item], 'Falta a tag IBSCBS!');
+                    } elseif (!empty($this->aGTribSN[$item])) {
+                        // NT 2026.005 - Simples Nacional gTribSN
+                        $this->addTag($ibscbs, $this->aGTribSN[$item], 'Falta a tag IBSCBS!');
                     }
                     //gEstornoCred
                     if (!empty($this->aGEstornoCred[$item])) {
@@ -1297,6 +1305,8 @@ final class Make
                     'gMono_vCBSMonoReten',
                     'gMono_vIBSMonoRet',
                     'gMono_vCBSMonoRet',
+                    'gTribSN_vIBSSN',
+                    'gTribSN_vCBSSN',
                 ];
                 $this->tagIBSCBSTot((object)$ib);
             }

@@ -19,6 +19,7 @@ use DOMException;
  * @property array $aGAjusteCompet
  * @property array $aGEstornoCred
  * @property array $aGCredPresOper
+ * @property array $aGTribSN
  * @property string $cst_ibscbs
  * @property stdClass $stdIBSCBSTot
  * @property stdClass $stdIBSCredPresTot
@@ -1299,5 +1300,87 @@ trait TraitTagDetIBSCBS
         }
         $this->aGCredPresOper[$std->item] = $cred;
         return $cred;
+    }
+
+    /**
+     * Grupo de Tributação do Simples Nacional UB115a pai UB01
+     * $this->aGTribSN[$item]
+     * IBSCBS/gTribSN
+     * @param stdClass $std
+     * @return DOMElement
+     * @throws DOMException
+     */
+    public function taggTribSN(stdClass $std): DOMElement
+    {
+        $possible = [
+            'item',
+            'pIBSSN',
+            'vIBSSN',
+            'pCBSSN',
+            'vCBSSN',
+        ];
+        $std = $this->equilizeParameters($std, $possible);
+        $identificador = "UB115a gTribSN Item: $std->item -";
+
+        if (!isset($this->stdIBSCBSTot->gTribSN)) {
+            $this->stdIBSCBSTot->gTribSN = new \stdClass();
+            $this->stdIBSCBSTot->gTribSN->vIBSSN = 0;
+            $this->stdIBSCBSTot->gTribSN->vCBSSN = 0;
+        }
+
+        $vIBSSN = (float) ($std->vIBSSN ?? 0);
+        $vCBSSN = (float) ($std->vCBSSN ?? 0);
+
+        $this->stdIBSCBSTot->gTribSN->vIBSSN += $vIBSSN;
+        $this->stdIBSCBSTot->gTribSN->vCBSSN += $vCBSSN;
+
+        $this->aVItem[$std->item]['vIBS'] = $vIBSSN;
+        $this->aVItem[$std->item]['vCBS'] = $vCBSSN;
+
+        $gTribSN = $this->dom->createElement("gTribSN");
+
+        $gIBSSN = $this->dom->createElement("gIBSSN");
+        $this->dom->addChild(
+            $gIBSSN,
+            "pIBSSN",
+            $this->conditionalNumberFormatting($std->pIBSSN, 4),
+            true,
+            "$identificador Alíquota do IBS do Simples Nacional (pIBSSN)"
+        );
+        $this->dom->addChild(
+            $gIBSSN,
+            "vIBSSN",
+            $this->conditionalNumberFormatting($vIBSSN),
+            true,
+            "$identificador Valor do IBS do Simples Nacional (vIBSSN)"
+        );
+        $gTribSN->appendChild($gIBSSN);
+
+        $gCBSSN = $this->dom->createElement("gCBSSN");
+        $this->dom->addChild(
+            $gCBSSN,
+            "pCBSSN",
+            $this->conditionalNumberFormatting($std->pCBSSN, 4),
+            true,
+            "$identificador Alíquota da CBS do Simples Nacional (pCBSSN)"
+        );
+        $this->dom->addChild(
+            $gCBSSN,
+            "vCBSSN",
+            $this->conditionalNumberFormatting($vCBSSN),
+            true,
+            "$identificador Valor da CBS do Simples Nacional (vCBSSN)"
+        );
+        $gTribSN->appendChild($gCBSSN);
+
+        $this->flagIBSCBS = true;
+
+        if (empty($this->aIBSCBS[$std->item])) {
+            $ibscbs = $this->dom->createElement("IBSCBS");
+            $this->aIBSCBS[$std->item] = $ibscbs;
+        }
+
+        $this->aGTribSN[$std->item] = $gTribSN;
+        return $gTribSN;
     }
 }
