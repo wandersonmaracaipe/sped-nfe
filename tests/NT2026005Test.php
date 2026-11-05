@@ -188,3 +188,4 @@ class NT2026005Test extends TestCase
         $this->assertSame('0.85', $totalCBSSN->nodeValue);
     }
 }
+
