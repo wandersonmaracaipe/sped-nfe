@@ -18,7 +18,7 @@ Biblioteca para geração e comunicação das NFe com as SEFAZ autorizadoras, e 
 
 ## Situação das Notas Técnicas (ValuorERP)
 
-Conferido em **05/11/2026** após incorporação do PR #1399 (robmachado/master) contra a lista oficial do Portal Nacional da NF-e, o código deste repositório (`src/`, `schemes/`) e o uso na API Fiscal (`fiscal-api`).
+Conferido em **20/11/2026** (revisão linha a linha contra a `fiscal-api` e o backend do ERP; base: PR #1399 de robmachado/master) contra a lista oficial do Portal Nacional da NF-e, o código deste repositório (`src/`, `schemes/`) e o uso na API Fiscal (`fiscal-api`).
 
 ### Como ler a tabela
 
@@ -39,11 +39,11 @@ Leiaute em uso: **PL_009_V4** (sem Reforma), **PL_010_V1.30** e **PL_010g** (com
 
 | NT | Versão | Assunto | Lib | API | O que falta |
 |---|---|---|---|---|---|
-| 2025.002-RTC | 1.53 | Reforma Tributária (IBS/CBS/IS) | ✅ | 🟡 | Lib atualizada com PL_010g e schemas RTC. API Fiscal precisa atualizar builders para usufruir das novas tags. |
+| 2025.002-RTC | 1.53 | Reforma Tributária (IBS/CBS/IS) | ✅ | ✅ | Lib com PL_010g e schemas RTC. NF-e, NFC-e e CT-e montam `IBSCBS` (inclui tributação regular e monofásico); o ERP envia `cClassTrib` por produto. |
 | 2026.010 | 1.00 | DANFE da Reforma (IBS/CBS/IS no DANFE) | ❌ | ❌ | O DANFE (`DanfeValuor`/sped-da) não mostra IBS/CBS/IS. Produção em 01/12/2026. |
-| 2026.008 | 1.01 | Valor líquido do produto (`vUnComLiq`, `vProdLiq`, `vProdLiqTot`) e `ICMSPrevistoPagtoAntecip` | ✅ | ❌ | Implementado na lib no PR #1399. Falta a API Fiscal e ERP exporem e calcularem os novos campos. |
-| 2026.007 | 1.11 | Emissão por contribuinte exclusivo do IBS/CBS (emitente sem IE), LCC/CCC | ✅ | 🟡 | O schema aceita emitente sem IE e tagEmit atualizada. Falta encaminhar esse emitente à SVRS (autorização centralizada). |
-| 2026.006 | 1.01 | Vinculação com a transação de pagamento (split payment): grupo YC (`pagContr`) e evento 110300 | ✅ | ❌ | Implementado na lib (`TraitTagPgtoVinc` e evento 110300). Falta API Fiscal enviar grupo YC. |
+| 2026.008 | 1.01 | Valor líquido do produto (`vUnComLiq`, `vProdLiq`, `vProdLiqTot`) e `ICMSPrevistoPagtoAntecip` | ✅ | 🟡 | `ICMSPrevistoPagtoAntecip` já sai na NF-e. Falta a API Fiscal/ERP calcularem e enviarem `vUnComLiq`/`vProdLiq` por item. |
+| 2026.007 | 1.11 | Emissão por contribuinte exclusivo do IBS/CBS (emitente sem IE), LCC/CCC | ✅ | 🟡 | A API aceita emitente sem IE no leiaute PL_010. Falta encaminhar esse emitente à SVRS (autorização centralizada). |
+| 2026.006 | 1.01 | Vinculação com a transação de pagamento (split payment): grupo YC (`pagContr`) e evento 110300 | ✅ | ✅ | NF-e e NFC-e enviam o grupo de vínculo (`VinculoPagamento`); evento 110300 em `DFeService`. A lib passou a gerar `idTransacao` como atributo (PR #1406); a API ainda monta o corpo do evento por conta própria. |
 | 2026.009 | 1.00 | Regra I08-140: CFOP 1.949/2.949 | — | — | Só regra da SEFAZ, sem mudança de leiaute. |
 | 2026.004 | 1.01 | CNPJ alfanumérico no schema | ✅ | ✅ | XSD com CNPJ alfanumérico. A API normaliza preservando letras (`App\Support\Cnpj`). |
 | 2026.002 / 2026.003 | 1.11 / 1.00 | DANFE Simplificado Tipo 2 (`tpImp=6`) | ✅ | 🟡 | O XML aceita `tpImp=6` (cStat 120 incluído). Falta o **layout de impressão** do DANFE Simplificado Tipo 2. |
