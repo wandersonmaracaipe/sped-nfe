@@ -44,8 +44,9 @@ trait TraitCalculations
                 $value -= ($data['indDeduzDeson'] == 1) ? ($data['vDescDeson'] ?? 0) : 0;
                 $value += ($data['indSomaPISST'] == 1) ? ($data['vPISST'] ?? 0) : 0;
                 $value += ($data['indSomaCOFINSST'] == 1) ? ($data['vCOFINSST'] ?? 0) : 0;
+                // MOC VB01-10/20: IBS/CBS/IS são "por fora" e entram no vItem a partir de 2027 (somar, não substituir)
                 if ($year >= 2027) {
-                    $value = ($data['vIBS'] ?? 0)
+                    $value += ($data['vIBS'] ?? 0)
                         + ($data['vCBS'] ?? 0)
                         + ($data['vIS'] ?? 0)
                         + ($data['vTotIBSMoniItem'] ?? 0)
@@ -65,8 +66,9 @@ trait TraitCalculations
                 $value -= ($data['indDeduzDeson'] == 1) ? ($data['vDescDeson'] ?? 0) : 0;
                 $value += ($data['indSomaPISST'] == 1) ? ($data['vPISST'] ?? 0) : 0;
                 $value += ($data['indSomaCOFINSST'] == 1) ? ($data['vCOFINSST'] ?? 0) : 0;
+                // MOC VB01-10/20: IBS/CBS/IS são "por fora" e entram no vItem a partir de 2027 (somar, não substituir)
                 if ($year >= 2027) {
-                    $value = ($data['vIBS'] ?? 0)
+                    $value += ($data['vIBS'] ?? 0)
                         + ($data['vCBS'] ?? 0)
                         + ($data['vIS'] ?? 0);
                 }
