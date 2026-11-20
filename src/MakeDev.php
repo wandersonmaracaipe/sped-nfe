@@ -350,9 +350,8 @@ final class MakeDev
         $this->stdIBSCBSTot->gEstornoCred->vIBSEstCred = 0;
         $this->stdIBSCBSTot->gEstornoCred->vCBSEstCred = 0;
 
-        $this->stdIBSCBSTot->gTribSN = new stdClass();
-        $this->stdIBSCBSTot->gTribSN->vIBSSN = 0;
-        $this->stdIBSCBSTot->gTribSN->vCBSSN = 0;
+        // gTribSN (NT 2026.005) NÃO é inicializado: o total só existe se algum item tiver o grupo
+        // (rejeições 1275/1276); taggTribSN cria o acumulador.
     }
 
     /**
@@ -823,8 +822,10 @@ final class MakeDev
                     } elseif (!empty($this->aGAjusteCompet[$item])) {
                         //não existe gIBSCBS, nem gIBSCBSMono, nem gTransfCred entao add gAjusteCompet
                         $this->addTag($ibscbs, $this->aGAjusteCompet[$item], 'Falta a tag IBSCBS!');
-                    } elseif (!empty($this->aGTribSN[$item])) {
-                        // NT 2026.005 - Simples Nacional gTribSN
+                    }
+                    // NT 2026.005 - gTribSN vem DEPOIS do choice (gIBSCBS...) e pode coexistir com o
+                    // gIBSCBS (CRT 2 sem regime regular e CRT 3 com opção pendente pelo SN)
+                    if (!empty($this->aGTribSN[$item])) {
                         $this->addTag($ibscbs, $this->aGTribSN[$item], 'Falta a tag IBSCBS!');
                     }
                     //gEstornoCred

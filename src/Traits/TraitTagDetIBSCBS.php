@@ -1328,33 +1328,37 @@ trait TraitTagDetIBSCBS
             $this->stdIBSCBSTot->gTribSN->vCBSSN = 0;
         }
 
-        $vIBSSN = (float) ($std->vIBSSN ?? 0);
+        // sem pIBSSN não há gIBSSN no item: o IBS não entra no total (W59i = soma dos vIBSSN informados)
+        $vIBSSN = (isset($std->pIBSSN) && $std->pIBSSN !== '') ? (float) ($std->vIBSSN ?? 0) : 0.0;
         $vCBSSN = (float) ($std->vCBSSN ?? 0);
 
         $this->stdIBSCBSTot->gTribSN->vIBSSN += $vIBSSN;
         $this->stdIBSCBSTot->gTribSN->vCBSSN += $vCBSSN;
 
-        $this->aVItem[$std->item]['vIBS'] = $vIBSSN;
-        $this->aVItem[$std->item]['vCBS'] = $vCBSSN;
+        // IBS/CBS do Simples Nacional compõem o DAS: não são tributo "por fora" e não alteram o
+        // vItem nem sobrescrevem os valores do gIBSCBS (que pode coexistir no mesmo item).
 
         $gTribSN = $this->dom->createElement("gTribSN");
 
-        $gIBSSN = $this->dom->createElement("gIBSSN");
-        $this->dom->addChild(
-            $gIBSSN,
-            "pIBSSN",
-            $this->conditionalNumberFormatting($std->pIBSSN, 4),
-            true,
-            "$identificador Alíquota do IBS do Simples Nacional (pIBSSN)"
-        );
-        $this->dom->addChild(
-            $gIBSSN,
-            "vIBSSN",
-            $this->conditionalNumberFormatting($vIBSSN),
-            true,
-            "$identificador Valor do IBS do Simples Nacional (vIBSSN)"
-        );
-        $gTribSN->appendChild($gIBSSN);
+        // gIBSSN é opcional (0-1): o excesso de sublimite (CRT 2 / tpRegimeIBSCBS 3) só informa a CBS.
+        if (isset($std->pIBSSN) && $std->pIBSSN !== '') {
+            $gIBSSN = $this->dom->createElement("gIBSSN");
+            $this->dom->addChild(
+                $gIBSSN,
+                "pIBSSN",
+                $this->conditionalNumberFormatting($std->pIBSSN, 4),
+                true,
+                "$identificador Alíquota do IBS do Simples Nacional (pIBSSN)"
+            );
+            $this->dom->addChild(
+                $gIBSSN,
+                "vIBSSN",
+                $this->conditionalNumberFormatting($vIBSSN),
+                true,
+                "$identificador Valor do IBS do Simples Nacional (vIBSSN)"
+            );
+            $gTribSN->appendChild($gIBSSN);
+        }
 
         $gCBSSN = $this->dom->createElement("gCBSSN");
         $this->dom->addChild(

@@ -33,6 +33,8 @@ Conferido em **20/11/2026** (revisão linha a linha contra a `fiscal-api` e o ba
 - ❌ não implementado;
 - — não se aplica (regra validada pela SEFAZ, sem campo novo para o emissor, ou operação fora do perfil).
 
+Schemas conferidos arquivo a arquivo em **20/11/2026** contra os pacotes do portal: 010h v1.03, 010g, 010f v1.04, 010e v1.02, eventos RTC v1.40 (`e211110` atualizado), 010d v1.03 e v1.01, Distribuição DF-e v1.04, Averbação v1.01, Conciliação Financeira e Insucesso na Entrega.
+
 Leiaute em uso: **PL_009_V4** (sem Reforma) e **PL_010h** v1.03 (com RTC; NT 2026.005 / 2026.006 / 2026.008, publicado em 13/11/2026). **PL_010_V1.30** e **PL_010g** ficam para compatibilidade.
 
 ### NTs vigentes publicadas em 2026
@@ -42,17 +44,17 @@ Leiaute em uso: **PL_009_V4** (sem Reforma) e **PL_010h** v1.03 (com RTC; NT 202
 | 2025.002-RTC | 1.53 | Reforma Tributária (IBS/CBS/IS) | ✅ | ✅ | Lib com PL_010g e schemas RTC. NF-e, NFC-e e CT-e montam `IBSCBS` (inclui tributação regular e monofásico); o ERP envia `cClassTrib` por produto. |
 | 2026.010 | 1.00 | DANFE da Reforma (IBS/CBS/IS no DANFE) | ❌ | ❌ | O DANFE (`DanfeValuor`/sped-da) não mostra IBS/CBS/IS. Produção em 01/12/2026. |
 | 2026.008 | 1.01 | Valor líquido do produto (`vUnComLiq`, `vProdLiq`, `vProdLiqTot`) e `ICMSPrevistoPagtoAntecip` | ✅ | 🟡 | `ICMSPrevistoPagtoAntecip` já sai na NF-e. Falta a API Fiscal/ERP calcularem e enviarem `vUnComLiq`/`vProdLiq` por item. |
-| 2026.005 | 1.00 | Simples Nacional na RTC: `tpRegimeIBSCBS` (emitente), `cAtivSN` (item), `gTribSN` e evento 412140 | ✅ | 🟡 | Schemas no PL_010h. `cAtivSN` corrigido para a posição do XSD (depois de `indBemMovelUsado`). A API envia `tpRegimeIBSCBS`/`cAtivSN` a partir da vigência; falta `gTribSN` (alíquotas efetivas do Simples) e o evento 412140. |
+| 2026.005 | 1.00 | Simples Nacional na RTC: `tpRegimeIBSCBS` (emitente), `cAtivSN` (item), `gTribSN` e evento 412140 | ✅ | ✅ | Schemas no PL_010h. Corrigido na lib: `cAtivSN` na posição do XSD; total `gTribSN` só quando algum item tem o grupo (saía zerado em toda nota com IBS/CBS → rejeição 1276 / XSD); `gIBSSN` opcional; `gTribSN` junto do `gIBSCBS`. A API aplica a tabela do item 2.3 por regime (`trib_sn`) com as alíquotas efetivas cadastradas na empresa. O 412140 é do Fisco (tpAutor 5, "implementação futura"): a API o lê na consulta da nota (`EventoTributacaoSimples`). |
 | 2026.007 | 1.11 | Emissão por contribuinte exclusivo do IBS/CBS (emitente sem IE), LCC/CCC | ✅ | 🟡 | A API aceita emitente sem IE no leiaute PL_010. Falta encaminhar esse emitente à SVRS (autorização centralizada). |
 | 2026.006 | 1.01 | Vinculação com a transação de pagamento (split payment): grupo YC (`pagContr`) e evento 110300 | ✅ | ✅ | NF-e e NFC-e enviam o grupo de vínculo (`VinculoPagamento`); evento 110300 em `DFeService`. A lib passou a gerar `idTransacao` como atributo (PR #1406); a API ainda monta o corpo do evento por conta própria. |
 | 2026.009 | 1.00 | Regra I08-140: CFOP 1.949/2.949 | — | — | Só regra da SEFAZ, sem mudança de leiaute. |
-| 2026.004 | 1.01 | CNPJ alfanumérico no schema | ✅ | ✅ | XSD com CNPJ alfanumérico. A API normaliza preservando letras (`App\Support\Cnpj`). |
+| 2026.004 | 1.01 | CNPJ alfanumérico no schema | ✅ | ✅ | XSD com CNPJ alfanumérico (PL_010d v1.03). Em 20/11/2026: Id da NF-e e QR Code no PL_009_V4, Id de todos os eventos (cancelamento, CC-e, EPEC…) e da inutilização em todas as pastas, e Distribuição DF-e v1.04. A API normaliza preservando letras (`App\Support\Cnpj`). |
 | 2026.002 / 2026.003 | 1.11 / 1.00 | DANFE Simplificado Tipo 2 (`tpImp=6`) | ✅ | 🟡 | O XML aceita `tpImp=6` (cStat 120 incluído). Falta o **layout de impressão** do DANFE Simplificado Tipo 2. |
 | 2026.001 | 1.02b | Provedor de Assinatura e Autorização (PAA) | ❌ | ❌ | O XSD tem `infPAA`, mas a lib não monta. É opcional (só para quem emite pelo PAA). |
 | 2021.003 | 1.50 | Regras do GTIN | — | ✅ | Regras da SEFAZ. O ERP valida o dígito verificador e manda "SEM GTIN" quando o código é inválido. |
 | 2023.003 | 1.40 | Regras de CFOP na NFC-e | — | ✅ | O ERP troca o CFOP pelo aceito na NFC-e (`CfopNfce`). |
 | 2014.001 | 1.41 | EPEC | ✅ | 🟡 | NF-e: `POST /nfe/epec`. A EPEC da NFC-e (SP) existe só na lib. |
-| 2014.002 | 1.40 | Distribuição DF-e | ✅ | ✅ | `/manifesto/novosDocumentos` (NF destinadas). |
+| 2014.002 | 1.40 | Distribuição DF-e | ✅ | ✅ | `/manifesto/novosDocumentos` (NF destinadas). Schemas no pacote v1.04 (03/07/2026). |
 | 2024.003 | 1.10 | Agro: guias e defensivos (grupo ZF) | ✅ | ✅ | `tagAgropecuarioGuia`/`Defensivo`. |
 | 2020.001 | 1.60 | Manifestação do destinatário | ✅ | ✅ | `/manifesto/manifestar`. |
 | 2022.002 | 1.30a | Equiparação à exportação | — | — | Regras da SEFAZ. |
