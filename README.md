@@ -33,7 +33,7 @@ Conferido em **20/11/2026** (revisão linha a linha contra a `fiscal-api` e o ba
 - ❌ não implementado;
 - — não se aplica (regra validada pela SEFAZ, sem campo novo para o emissor, ou operação fora do perfil).
 
-Leiaute em uso: **PL_009_V4** (sem Reforma), **PL_010_V1.30** e **PL_010g** (com RTC / NT 2026.008 / NT 2026.006).
+Leiaute em uso: **PL_009_V4** (sem Reforma) e **PL_010h** v1.03 (com RTC; NT 2026.005 / 2026.006 / 2026.008, publicado em 13/11/2026). **PL_010_V1.30** e **PL_010g** ficam para compatibilidade.
 
 ### NTs vigentes publicadas em 2026
 
@@ -42,6 +42,7 @@ Leiaute em uso: **PL_009_V4** (sem Reforma), **PL_010_V1.30** e **PL_010g** (com
 | 2025.002-RTC | 1.53 | Reforma Tributária (IBS/CBS/IS) | ✅ | ✅ | Lib com PL_010g e schemas RTC. NF-e, NFC-e e CT-e montam `IBSCBS` (inclui tributação regular e monofásico); o ERP envia `cClassTrib` por produto. |
 | 2026.010 | 1.00 | DANFE da Reforma (IBS/CBS/IS no DANFE) | ❌ | ❌ | O DANFE (`DanfeValuor`/sped-da) não mostra IBS/CBS/IS. Produção em 01/12/2026. |
 | 2026.008 | 1.01 | Valor líquido do produto (`vUnComLiq`, `vProdLiq`, `vProdLiqTot`) e `ICMSPrevistoPagtoAntecip` | ✅ | 🟡 | `ICMSPrevistoPagtoAntecip` já sai na NF-e. Falta a API Fiscal/ERP calcularem e enviarem `vUnComLiq`/`vProdLiq` por item. |
+| 2026.005 | 1.00 | Simples Nacional na RTC: `tpRegimeIBSCBS` (emitente), `cAtivSN` (item), `gTribSN` e evento 412140 | ✅ | 🟡 | Schemas no PL_010h. `cAtivSN` corrigido para a posição do XSD (depois de `indBemMovelUsado`). A API envia `tpRegimeIBSCBS`/`cAtivSN` a partir da vigência; falta `gTribSN` (alíquotas efetivas do Simples) e o evento 412140. |
 | 2026.007 | 1.11 | Emissão por contribuinte exclusivo do IBS/CBS (emitente sem IE), LCC/CCC | ✅ | 🟡 | A API aceita emitente sem IE no leiaute PL_010. Falta encaminhar esse emitente à SVRS (autorização centralizada). |
 | 2026.006 | 1.01 | Vinculação com a transação de pagamento (split payment): grupo YC (`pagContr`) e evento 110300 | ✅ | ✅ | NF-e e NFC-e enviam o grupo de vínculo (`VinculoPagamento`); evento 110300 em `DFeService`. A lib passou a gerar `idTransacao` como atributo (PR #1406); a API ainda monta o corpo do evento por conta própria. |
 | 2026.009 | 1.00 | Regra I08-140: CFOP 1.949/2.949 | — | — | Só regra da SEFAZ, sem mudança de leiaute. |

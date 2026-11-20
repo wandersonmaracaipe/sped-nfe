@@ -205,16 +205,6 @@ trait TraitTagDet
                 "$identificador Classificação para subapuração do IBS na ZFM"
             );
         }
-        //NT 2026.005 - Código de Atividade do Simples Nacional (tag I17d)
-        if (isset($std->cAtivSN) && $std->cAtivSN !== '' && $std->cAtivSN !== null) {
-            $this->dom->addChild(
-                $prod,
-                "cAtivSN",
-                $std->cAtivSN,
-                false,
-                "$identificador Código de Atividade do Simples Nacional"
-            );
-        }
         $this->dom->addChild(
             $prod,
             "EXTIPI",
@@ -354,6 +344,16 @@ trait TraitTagDet
             false,
             "$identificador Indicador de fornecimento de bem móvel usado (indBemMovelUsado)"
         );
+        //NT 2026.005 - Código de Atividade do Simples Nacional (tag I17d): no XSD vem depois de indBemMovelUsado e antes de DI
+        if (isset($std->cAtivSN) && $std->cAtivSN !== '' && $std->cAtivSN !== null) {
+            $this->dom->addChild(
+                $prod,
+                "cAtivSN",
+                $std->cAtivSN,
+                false,
+                "$identificador Código de Atividade do Simples Nacional"
+            );
+        }
         $this->dom->addChild(
             $prod,
             "xPed",
