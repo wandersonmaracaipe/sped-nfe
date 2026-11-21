@@ -1,257 +1,217 @@
-# SPED-NFE 
+# sped-nfe
 
-Biblioteca para geração e comunicação das NFe com as SEFAZ autorizadoras, e visa fornecer os meios para gerar, assinar e enviar os dados relativos ao projeto Sped NFe das SEFAZ.
+Biblioteca PHP para gerar, assinar, validar e transmitir **NF-e (modelo 55)** e **NFC-e (modelo 65)** às SEFAZ autorizadoras, com eventos, consultas e distribuição de DF-e.
 
-## Atualizado — Notas Técnicas
+Este repositório é um **fork** de [nfephp-org/sped-nfe](https://github.com/nfephp-org/sped-nfe), mantido em dia com o original e usado pela API Fiscal do ValuorERP. Correções feitas aqui são enviadas ao projeto original sempre que fazem sentido para todos.
 
-## Atualizado (Upstream)
+[![PHP](https://img.shields.io/packagist/php-v/nfephp-org/sped-nfe)](https://packagist.org/packages/nfephp-org/sped-nfe)
+[![Licença](https://poser.pugx.org/nfephp-org/sped-nfe/license.svg)](LICENSE.md)
 
-- Nota Técnica 2026.002 v1.11 - Publicada em 01/10/2026
-- Nota Técnica 2026.010 v1.00 - Publicada em 01/10/2026
-- Nota Técnica 2023.002 v1.02 - Publicada em 27/10/2026
-- Nota Técnica 2026.008 v1.01 - Publicada em 30/10/2026
-- Nota Técnica 2026.007 v1.11 - Publicada em 30/10/2026
-- Nota Técnica 2026.006 v1.01 - Publicada em 30/10/2026
-- Nota Técnica 2026.005 v1.00 - Publicada em 30/10/2026
-- Nota Técnica 2025.002 v1.53 - Publicada em 30/10/2026
-- Schema XSD PL_010g (26/10/2026)
+## Sumário
 
-## Situação das Notas Técnicas (ValuorERP)
+- [O que este fork tem a mais](#o-que-este-fork-tem-a-mais)
+- [Situação das Notas Técnicas](#situação-das-notas-técnicas)
+- [Instalação](#instalação)
+- [Requisitos](#requisitos)
+- [Uso básico](#uso-básico)
+- [Estados atendidos](#estados-atendidos)
+- [Documentação](#documentação)
+- [Contribuindo](#contribuindo)
+- [Créditos e licença](#créditos-e-licença)
 
-Conferido em **20/11/2026** (revisão linha a linha contra a `fiscal-api` e o backend do ERP; base: PR #1399 de robmachado/master) contra a lista oficial do Portal Nacional da NF-e, o código deste repositório (`src/`, `schemes/`) e o uso na API Fiscal (`fiscal-api`).
+## O que este fork tem a mais
 
-### Como ler a tabela
+Correções e atualizações feitas aqui antes de chegarem ao projeto original (detalhes no `git log`):
+
+- **Pacote de schemas PL_010h v1.03** (13/11/2026: NT 2026.005, 2026.006 e 2026.008) em `schemes/PL_010h`.
+- **NT 2026.005 (Simples Nacional na Reforma):**
+  - `cAtivSN` na posição exigida pelo XSD;
+  - total `gTribSN` só quando algum item tem o grupo (antes saía zerado em toda nota com IBS/CBS, e a SEFAZ recusava com 1276);
+  - `gIBSSN` opcional;
+  - `gTribSN` junto do `gIBSCBS`.
+- **`vItem` a partir de 2027:** soma IBS, CBS e IS ao valor do item (regra VB01-10 do MOC). Antes substituía o valor pelos tributos.
+- **CNPJ alfanumérico (NT 2026.004)** em todas as pastas de schema: `Id` da NF-e, QR Code, `Id` de todos os eventos e da inutilização, `TCnpjVar` e Distribuição DF-e v1.04.
+- **Eventos da Reforma:** `e211110` atualizado para o pacote de eventos v1.40.
+
+## Situação das Notas Técnicas
+
+Conferido em **20/11/2026** contra o [Portal Nacional da NF-e](https://www.nfe.fazenda.gov.br/portal/listaConteudo.aspx?tipoConteudo=BMPFMBoln3w=), o [MOC online](https://moc.sped.fazenda.pr.gov.br/NFe_NFCe/VisaoGeral.html) e os [avisos da SVRS](https://dfe-portal.svrs.rs.gov.br/NFE/Avisos). Os schemas foram comparados arquivo a arquivo com todos os pacotes vigentes do portal.
+
+### Leiautes (`schemes/`)
+
+| Pasta | Uso |
+|---|---|
+| `PL_009_V4` | Leiaute sem a Reforma Tributária (padrão). |
+| `PL_010h` | Leiaute vigente com a Reforma (IBS/CBS/IS), NT 2026.005, 2026.006 e 2026.008. **Recomendado.** |
+| `PL_010_V1.30`, `PL_010g` | Versões anteriores do PL_010, mantidas por compatibilidade. |
+| `PL_010_V1`, `PL_010_V1.21` | Históricas. |
+
+### Notas Técnicas
 
 **Colunas:**
-- **Lib**: este sped-nfe.
-- **API**: a `fiscal-api`, que monta o XML e expõe os serviços para o ERP.
 
-**Situações:**
-- ✅ implementado e em uso;
-- 🟡 parcial (o que falta está descrito);
-- 📚 só na biblioteca (a API não usa nem expõe);
+- **Lib** é esta biblioteca.
+- **API** é a API Fiscal do ValuorERP, que monta o XML com esta biblioteca.
+
+**Legenda:**
+
+- ✅ implementado;
+- 🟡 parcial;
 - ❌ não implementado;
-- — não se aplica (regra validada pela SEFAZ, sem campo novo para o emissor, ou operação fora do perfil).
+- — não se aplica (regra só da SEFAZ, sem campo novo).
 
-Schemas conferidos arquivo a arquivo em **20/11/2026** contra os pacotes do portal: 010h v1.03, 010g, 010f v1.04, 010e v1.02, eventos RTC v1.40 (`e211110` atualizado), 010d v1.03 e v1.01, Distribuição DF-e v1.04, Averbação v1.01, Conciliação Financeira e Insucesso na Entrega.
-
-Leiaute em uso: **PL_009_V4** (sem Reforma) e **PL_010h** v1.03 (com RTC; NT 2026.005 / 2026.006 / 2026.008, publicado em 13/11/2026). **PL_010_V1.30** e **PL_010g** ficam para compatibilidade.
-
-### NTs vigentes publicadas em 2026
-
-| NT | Versão | Assunto | Lib | API | O que falta |
+| NT | Versão | Assunto | Lib | API | Observação |
 |---|---|---|---|---|---|
-| 2025.002-RTC | 1.53 | Reforma Tributária (IBS/CBS/IS) | ✅ | ✅ | Lib com PL_010g e schemas RTC. NF-e, NFC-e e CT-e montam `IBSCBS` (inclui tributação regular e monofásico); o ERP envia `cClassTrib` por produto. |
-| 2026.010 | 1.00 | DANFE da Reforma (IBS/CBS/IS no DANFE) | ❌ | ❌ | O DANFE (`DanfeValuor`/sped-da) não mostra IBS/CBS/IS. Produção em 01/12/2026. |
-| 2026.008 | 1.01 | Valor líquido do produto (`vUnComLiq`, `vProdLiq`, `vProdLiqTot`) e `ICMSPrevistoPagtoAntecip` | ✅ | 🟡 | `ICMSPrevistoPagtoAntecip` já sai na NF-e. Falta a API Fiscal/ERP calcularem e enviarem `vUnComLiq`/`vProdLiq` por item. |
-| 2026.005 | 1.00 | Simples Nacional na RTC: `tpRegimeIBSCBS` (emitente), `cAtivSN` (item), `gTribSN` e evento 412140 | ✅ | ✅ | Schemas no PL_010h. Corrigido na lib: `cAtivSN` na posição do XSD; total `gTribSN` só quando algum item tem o grupo (saía zerado em toda nota com IBS/CBS → rejeição 1276 / XSD); `gIBSSN` opcional; `gTribSN` junto do `gIBSCBS`. A API aplica a tabela do item 2.3 por regime (`trib_sn`) com as alíquotas efetivas cadastradas na empresa. O 412140 é do Fisco (tpAutor 5, "implementação futura"): a API o lê na consulta da nota (`EventoTributacaoSimples`). |
-| 2026.007 | 1.11 | Emissão por contribuinte exclusivo do IBS/CBS (emitente sem IE), LCC/CCC | ✅ | 🟡 | A API aceita emitente sem IE no leiaute PL_010. Falta encaminhar esse emitente à SVRS (autorização centralizada). |
-| 2026.006 | 1.01 | Vinculação com a transação de pagamento (split payment): grupo YC (`pagContr`) e evento 110300 | ✅ | ✅ | NF-e e NFC-e enviam o grupo de vínculo (`VinculoPagamento`); evento 110300 em `DFeService`. A lib passou a gerar `idTransacao` como atributo (PR #1406); a API ainda monta o corpo do evento por conta própria. |
-| 2026.009 | 1.00 | Regra I08-140: CFOP 1.949/2.949 | — | — | Só regra da SEFAZ, sem mudança de leiaute. |
-| 2026.004 | 1.01 | CNPJ alfanumérico no schema | ✅ | ✅ | XSD com CNPJ alfanumérico (PL_010d v1.03). Em 20/11/2026: Id da NF-e e QR Code no PL_009_V4, Id de todos os eventos (cancelamento, CC-e, EPEC…) e da inutilização em todas as pastas, e Distribuição DF-e v1.04. A API normaliza preservando letras (`App\Support\Cnpj`). |
-| 2026.002 / 2026.003 | 1.11 / 1.00 | DANFE Simplificado Tipo 2 (`tpImp=6`) | ✅ | 🟡 | O XML aceita `tpImp=6` (cStat 120 incluído). Falta o **layout de impressão** do DANFE Simplificado Tipo 2. |
-| 2026.001 | 1.02b | Provedor de Assinatura e Autorização (PAA) | ❌ | ❌ | O XSD tem `infPAA`, mas a lib não monta. É opcional (só para quem emite pelo PAA). |
-| 2021.003 | 1.50 | Regras do GTIN | — | ✅ | Regras da SEFAZ. O ERP valida o dígito verificador e manda "SEM GTIN" quando o código é inválido. |
-| 2023.003 | 1.40 | Regras de CFOP na NFC-e | — | ✅ | O ERP troca o CFOP pelo aceito na NFC-e (`CfopNfce`). |
-| 2014.001 | 1.41 | EPEC | ✅ | 🟡 | NF-e: `POST /nfe/epec`. A EPEC da NFC-e (SP) existe só na lib. |
-| 2014.002 | 1.40 | Distribuição DF-e | ✅ | ✅ | `/manifesto/novosDocumentos` (NF destinadas). Schemas no pacote v1.04 (03/07/2026). |
-| 2024.003 | 1.10 | Agro: guias e defensivos (grupo ZF) | ✅ | ✅ | `tagAgropecuarioGuia`/`Defensivo`. |
-| 2020.001 | 1.60 | Manifestação do destinatário | ✅ | ✅ | `/manifesto/manifestar`. |
-| 2022.002 | 1.30a | Equiparação à exportação | — | — | Regras da SEFAZ. |
+| 2026.010 | 1.00 | DANFE com IBS/CBS/IS | ❌ | ❌ | DANFE ainda não mostra os tributos da Reforma. Produção em 01/12/2026. |
+| 2026.009 | 1.00 | Regra I08-140 (CFOP 1.949/2.949) | — | — | Só validação da SEFAZ. |
+| 2026.008 | 1.01 | Valor líquido do produto e `ICMSPrevistoPagtoAntecip` | ✅ | 🟡 | `ICMSPrevistoPagtoAntecip` em uso. Falta enviar `vUnComLiq`/`vProdLiq` (obrigatoriedade futura). Produção em 14/12/2026. |
+| 2026.007 | 1.11 | Contribuinte exclusivo do IBS/CBS (emitente sem IE) | ✅ | 🟡 | Emitente sem IE aceito no PL_010. Falta encaminhar à SVRS. |
+| 2026.006 | 1.01 | Vínculo com a transação de pagamento (split payment, grupo YC e evento 110300) | ✅ | ✅ | Produção adiada para 14/12/2026 (aviso SVRS/CGIBS de 12/11/2026). |
+| 2026.005 | 1.00 | Simples Nacional na Reforma: `tpRegimeIBSCBS`, `cAtivSN`, `gTribSN`, evento 412140 | ✅ | ✅ | Produção em 14/12/2026. O 412140 é gerado pelo Fisco ("implementação futura"); a API só o lê na consulta. |
+| 2026.004 | 1.01 | CNPJ alfanumérico | ✅ | ✅ | CNPJ de teste em homologação: `PC3D315K000193` (IE `0018001360`). |
+| 2026.002 / 2026.003 | 1.11 / 1.00 | DANFE Simplificado Tipo 2 (`tpImp=6`) | ✅ | 🟡 | XML pronto. Falta o layout de impressão. |
+| 2026.001 | 1.02b | Provedor de Assinatura e Autorização (PAA) | ❌ | ❌ | Opcional, só para quem emite pelo PAA. |
+| 2025.002 | 1.53 | Reforma Tributária (IBS/CBS/IS) | ✅ | ✅ | NF-e, NFC-e e CT-e montam o grupo `IBSCBS`. |
+| 2024.003 | 1.10 | Agro: guias e defensivos (grupo ZF) | ✅ | ✅ | |
+| 2023.003 | 1.40 | Regras de CFOP na NFC-e | — | ✅ | |
+| 2022.002 | 1.30a | Equiparação à exportação | — | — | Só validação da SEFAZ. |
+| 2021.003 | 1.50 | Regras do GTIN | — | ✅ | |
+| 2020.001 | 1.60 | Manifestação do destinatário | ✅ | ✅ | |
+| 2014.002 | 1.40 | Distribuição DF-e | ✅ | ✅ | Schemas do pacote v1.04 (03/07/2026). |
+| 2014.001 | 1.41 | EPEC | ✅ | 🟡 | NF-e em uso; EPEC da NFC-e (SP) só na biblioteca. |
 
+## Instalação
 
-![PHP Supported Version][ico-php]
-![Actions](https://github.com/nfephp-org/sped-nfe/actions/workflows/ci.yml/badge.svg)
-[![codecov](https://codecov.io/gh/nfephp-org/sped-nfe/branch/master/graph/badge.svg?token=UsZnjTNKKh)](https://codecov.io/gh/nfephp-org/sped-nfe)
+Pelo Packagist (projeto original):
 
-[![Latest Stable Version][ico-stable]][link-packagist]
-[![Latest Version on Packagist][ico-version]][link-packagist]
-[![License][ico-license]][link-packagist]
-[![Total Downloads][ico-downloads]][link-downloads]
-
-[![Issues][ico-issues]][link-issues]
-[![Forks][ico-forks]][link-forks]
-[![Stars][ico-stars]][link-stars]
-
-## Estados atendidos
-
-### NFe (modelo 55) TODOS
-
-### NFCe (modelo 65) Todos
-
-### NFe com eCPF (emissor pessoa física)
-
-> Os estados de **CE**, **PR** e **SP** **NÃO ACEITAM EMISSÃO com eCPF**
-
-> AM e GO não foi possivel verificar por problemas na comunicação
-
-> Todos os demais estados (aparentemente) já aceitam emissão por eCPF
-
-Este pacote é aderente com os [PSR-1], [PSR-2] e [PSR-4]. Se você observar negligências de conformidade, por favor envie um patch via pull request.
-
-[PSR-1]: https://github.com/php-fig/fig-standards/blob/master/accepted/PSR-1-basic-coding-standard.md
-[PSR-2]: https://github.com/php-fig/fig-standards/blob/master/accepted/PSR-2-coding-style-guide.md
-[PSR-4]: https://github.com/php-fig/fig-standards/blob/master/accepted/PSR-4-autoloader.md
-
-Não deixe de se cadastrar no [grupo de discussão do NFePHP](http://groups.google.com/group/nfephp) para acompanhar o desenvolvimento e participar das discussões e tirar dúvidas!
-
-## Install
-
-**Este pacote está listado no [Packgist](https://packagist.org/) foi desenvolvido para uso do [Composer](https://getcomposer.org/), portanto não será explicitada nenhuma alternativa de instalação.**
-
-*E deve ser instalado com:*
 ```bash
 composer require nfephp-org/sped-nfe
 ```
-Ou ainda alterando o composer.json do seu aplicativo inserindo:
+
+Por este fork, fixado em um commit (é assim que a API Fiscal usa):
+
 ```json
-"require": {
-    "nfephp-org/sped-nfe" : "^5.0"
+{
+    "repositories": [
+        { "type": "vcs", "url": "https://github.com/wandersonmaracaipe/sped-nfe" }
+    ],
+    "require": {
+        "nfephp-org/sped-nfe": "dev-master#<commit> as 5.2.5"
+    }
 }
 ```
 
-*Para utilizar o pacote em desenvolvimento (branch master) deve ser instalado com:*
-```bash
-composer require nfephp-org/sped-nfe:dev-master
-```
+Para usar a branch de desenvolvimento (`dev-master`), o `composer.json` do seu projeto precisa aceitar pacotes instáveis:
 
-*Ou ainda alterando o composer.json do seu aplicativo inserindo:*
 ```json
-"require": {
-    "nfephp-org/sped-nfe" : "dev-master"
-}
+"minimum-stability": "dev",
+"prefer-stable": true
 ```
 
-> NOTA: Ao utilizar este pacote na versão em desenvolvimento não se esqueça de alterar o composer.json da sua aplicação para aceitar pacotes em desenvolvimento, alterando a propriedade "minimum-stability" de "stable" para "dev".
-> ```json
-> "minimum-stability": "dev"
-> ```
+## Requisitos
 
-## Requirements
+- PHP 7.4 ou superior (recomendado 8.2 ou 8.3)
+- Extensões: `dom`, `json`, `libxml`, `openssl`, `simplexml`, `soap`, `zlib`
+- Dependências instaladas pelo Composer: [sped-common](https://github.com/nfephp-org/sped-common), [sped-gtin](https://github.com/nfephp-org/sped-gtin) e `justinrainbow/json-schema`
+- Certificado digital A1 (`.pfx`) do emitente
 
-Para que este pacote possa funcionar são necessários os seguintes requisitos do PHP e outros pacotes dos quais esse depende.
+Pacotes que costumam acompanhar esta biblioteca (opcionais):
 
-- PHP 7.x (minimo PHP 7.4 veja sempre nos badges) 
-- ext-curl
-- ext-dom
-- ext-json
-- ext-gd
-- ext-mbstring
-- ext-mcrypt
-- ext-openssl
-- ext-soap
-- ext-xml
-- ext-zip
-- [sped-common](https://github.com/nfephp-org/sped-common)
+| Pacote | Para quê |
+|---|---|
+| [sped-da](https://github.com/nfephp-org/sped-da) | DANFE, DANFCE e demais documentos impressos |
+| [sped-mail](https://github.com/nfephp-org/sped-mail) | Envio das notas por e-mail |
+| [sped-ibpt](https://github.com/nfephp-org/sped-ibpt) | Tributos aproximados (Lei 12.741) |
+| [sped-gnre](https://github.com/nfephp-org/sped-gnre) | Guias GNRE |
+| [posprint](https://github.com/nfephp-org/posprint) | Impressão em impressoras térmicas |
 
-> Para outras ações necessárias ao SPED, podem ser usados (opcionalmente) outros pacotes, como:
+## Uso básico
 
-> - [sped-da](https://github.com/nfephp-org/sped-da) Geração dos documentos impressos (DANFE, DACTE, etc.)
-> - [sped-mail](https://github.com/nfephp-org/sped-mail) Envio de email com as notas e outros documentos fiscais 
-> - [sped-ibpt](https://github.com/nfephp-org/sped-ibpt) Consulta dos impostos aproximados na venda a consumidor
-> - [sped-gnre](https://github.com/nfephp-org/sped-gnre) Geração do GNRE
-> - [posprint](https://github.com/nfephp-org/posprint) Impressão de documentos em impressoras térmicas POS
+A biblioteca usa *namespaces* e o autoload do Composer. Não inclua os arquivos com `require` diretamente.
 
-
-## Como eu faço uso desta biblioteca no meu projeto?
-
-Primeiro, esta biblioteca faz uso dos recursos mais atuais do PHP para classes e objetos, portanto abaixo vai um exemplo ERRADO de uso:
-```
-require 'sped-nfe/src/Make.php';
-
-$nfe = new Make();
-```
-Portanto, você deve primeiro entender que para usar esta biblioteca você precisará trabalhar com NAMESPACES pois trabalhamos com NAMESPACES.
-
-Agora que você sabe que NAMESPACES é requerido, o uso correto para o exemplo acima seria:
-```
-// VENDOR_DIR = pasta vendor da sua instalação composer
-require VENDOR_DIR . 'autoload.php';
+```php
+require __DIR__ . '/vendor/autoload.php';
 
 use NFePHP\NFe\Make;
+use NFePHP\NFe\Tools;
+use NFePHP\Common\Certificate;
 
-$nfe = new Make();
+// Montagem do XML com o leiaute desejado (PL_009_V4 sem Reforma, PL_010h com Reforma)
+$nfe = new Make('PL_010h');
+// ... tagide(), tagemit(), tagprod(), tagIBSCBS() ...
+$xml = $nfe->getXML();
+
+// Assinatura e transmissão
+$config = json_encode([
+    'atualizacao' => date('Y-m-d H:i:s'),
+    'tpAmb'       => 2,          // 1 = produção, 2 = homologação
+    'razaosocial' => 'EMPRESA TESTE LTDA',
+    'siglaUF'     => 'SP',
+    'cnpj'        => '00000000000000',
+    'schemes'     => 'PL_010h',
+    'versao'      => '4.00',
+]);
+$tools = new Tools($config, Certificate::readPfx(file_get_contents('certificado.pfx'), 'senha'));
+$xmlAssinado = $tools->signNFe($xml); // valida o XML contra o XSD do leiaute antes de assinar
 ```
 
-## Acknowledgments
+O guia completo está em [docs/StartGuide.md](docs/StartGuide.md).
 
-- A todos os colegas que colaboram de alguma forma com o desenvolvimento contínuo desta biblioteca.
+## Estados atendidos
 
+- **NF-e (modelo 55):** todas as UF.
+- **NFC-e (modelo 65):** todas as UF.
+- **NF-e emitida com e-CPF (pessoa física):** CE, PR e SP **não aceitam**. Em AM e GO não foi possível verificar. As demais UF aparentemente aceitam.
 
-## Documentation
+## Documentação
 
-O processo de documentação ainda está no inicio, mas já existem alguns documentos úteis.
+| Assunto | Arquivo |
+|---|---|
+| Primeiros passos | [StartGuide.md](docs/StartGuide.md) |
+| Configuração | [Config.md](docs/Config.md) |
+| Montagem do XML | [Make.md](docs/Make.md) · [MakePL010.md](docs/MakePL010.md) (Reforma) |
+| Pagamentos | [TagPag.md](docs/TagPag.md) |
+| Eventos da Reforma | [EventosRTC.md](docs/EventosRTC.md) |
+| Cancelamento por substituição | [CancelamentoSubs.md](docs/CancelamentoSubs.md) |
+| Contingência | [Contingency.md](docs/Contingency.md) |
+| QR Code da NFC-e | [QRCode.md](docs/QRCode.md) |
+| Conversão de TXT | [Convert.md](docs/Convert.md) · [EstruturaTxt.md](docs/EstruturaTxt.md) |
+| Leitura do retorno da SEFAZ | [Standardize.md](docs/Standardize.md) |
+| Certificado de teste | [GerarCertificadoAutoAssinadoParaTestes.md](docs/GerarCertificadoAutoAssinadoParaTestes.md) |
+| Todas as funcionalidades | [Funcionalidades.md](docs/Funcionalidades.md) |
 
-[Documentação](docs/Funcionalidades.md)
+Dúvidas de uso: [grupo NFePHP](http://groups.google.com/group/nfephp), em vez de abrir uma issue. Histórico de mudanças: [CHANGELOG.md](CHANGELOG.md).
 
-### Para tirar suas duvidas não inicie uma ISSUE, mas se inscreva no grupo do google [NFePHP](http://groups.google.com/group/nfephp).
- 
-## Contributing
+## Contribuindo
 
-Para contribuir com correções de BUGS, melhoria no código, documentação, elaboração de testes ou qualquer outro auxílio técnico e de programação por favor observe o [CONTRIBUTING](CONTRIBUTING.md) e o  [Código de Conduta](CONDUCT.md) para maiores detalhes.
+Leia o [CONTRIBUTING](CONTRIBUTING.md) e o [Código de Conduta](CONDUCT.md).
 
-### Etapas para contribuir com Código
+1. Faça um fork e clone o seu fork.
+2. Ligue o projeto original como `upstream` e sincronize antes de começar:
 
-1. Faça um fork do projeto em sua conta no GitHub
-2. Baixe a biblioteca na sua maquina de desenvolvimento a partir do seu próprio fork
-3. Execute o composer install na raiz do projeto (prefira usar o PHP 8.2 ou 8.3)
-4. Crie uma relação com o projeto original usando o git, com isso criará um bloco denominado "upstream" com uma cópia do projeto original
-```
-git remote add upstream git@github.com:nfephp-org/sped-nfe.git
-```
-5. Antes de começar a codar sobre sua cópia sempre sincronize o projeto com o repositório principal
-```
-git fetch upstream
-git merge upstream/master
-git push
-```
-6. Agora pode codar sobre sua cópia da biblioteca
-7. Ao terminar, sempre teste suas alterações para garantir o funcionamento, para isso recomendo criar uma pasta denominada "local" na raiz, e esta pasta não será enviada ao repositório, então poderá ter dados sensíveis.
-8. Sempre, antes de fazer envio ao seu repositório execute os comandos abaixo, a partir de raiz do projeto na sua maquina: 
-```
-composer phpcbf
-composer phpcs
-composer stan
-composer test
-```
-9. Se nenhum erro for indicado pos esses testes, pode enviar ao seu repositório, lá serão executados os comandos do GitHub Actions
-10. Se passar nos testes, pode fazer um pull request para o projeto original.
-11. Se o PR for aceito, não esqueça de repetir os comandos do passo 5.
- 
-## Change log
+   ```bash
+   git remote add upstream git@github.com:nfephp-org/sped-nfe.git
+   git fetch upstream && git merge upstream/master
+   ```
 
-Acompanhe o [CHANGELOG](CHANGELOG.md) para maiores informações sobre as alterações recentes.
+3. Rode `composer install` (PHP 8.2 ou 8.3).
+4. Para testes manuais com dados reais, use uma pasta `local/` na raiz. Ela não é enviada ao repositório.
+5. Antes de enviar, rode a verificação completa:
 
-## Testing
+   ```bash
+   composer phpcbf   # corrige o estilo
+   composer phpcs    # confere o estilo (PSR-12)
+   composer stan     # análise estática
+   composer test     # PHPUnit
+   ```
 
-Todos os testes são desenvolvidos para operar com o PHPUNIT
+6. Envie ao seu fork. O GitHub Actions repete as verificações, e com elas passando você abre o pull request.
 
-## Security
+Problemas de segurança: escreva direto aos mantenedores, sem abrir issue.
 
-Caso você encontre algum problema relativo a segurança, por favor envie um email diretamente aos mantenedores do pacote ao invés de abrir um ISSUE.
+## Créditos e licença
 
-## Credits
+- **Projeto original:** Roberto L. Machado e a comunidade [NFePHP](https://github.com/nfephp-org).
+- **Fork:** mantido para o ValuorERP.
 
-Roberto L. Machado (owner and developer)
-
-## License
-
-Este pacote está diponibilizado sob LGPLv3 ou MIT License (MIT). Leia  [Arquivo de Licença](LICENSE.md) para maiores informações.
-
-[ico-php]: https://img.shields.io/packagist/php-v/nfephp-org/sped-da
-[ico-stable]: https://poser.pugx.org/nfephp-org/sped-nfe/version
-[ico-stars]: https://img.shields.io/github/stars/nfephp-org/sped-nfe.svg?style=flat-square
-[ico-forks]: https://img.shields.io/github/forks/nfephp-org/sped-nfe.svg?style=flat-square
-[ico-issues]: https://img.shields.io/github/issues/nfephp-org/sped-nfe.svg?style=flat-square
-[ico-downloads]: https://img.shields.io/packagist/dt/nfephp-org/sped-nfe.svg?style=flat-square
-[ico-version]: https://img.shields.io/packagist/v/nfephp-org/sped-nfe.svg?style=flat-square
-[ico-license]: https://poser.pugx.org/nfephp-org/nfephp/license.svg?style=flat-square
-
-
-[link-packagist]: https://packagist.org/packages/nfephp-org/sped-nfe
-[link-downloads]: https://packagist.org/packages/nfephp-org/sped-nfe
-[link-author]: https://github.com/nfephp-org
-[link-issues]: https://github.com/nfephp-org/sped-nfe/issues
-[link-forks]: https://github.com/nfephp-org/sped-nfe/network
-[link-stars]: https://github.com/nfephp-org/sped-nfe/stargazers
-[link-gitter]: https://gitter.im/nfephp-org/sped-nfe?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
+Licenciado sob LGPLv3 ou MIT. Veja [LICENSE.md](LICENSE.md).
